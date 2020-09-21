@@ -80,6 +80,31 @@ cd etcd
 ```
 使用 build 脚本构建会在当前项目的 bin 目录生产 etcd 和 etcdctl 可执行程序。etcd 就是 etcd server 了，etcdctl 主要为 etcd server 提供了命令行操作。
 
+> 注意：在执行./build操作时，编译报错
+```go
+[root@localhost etcd]# ./build
+: No such file or directory
+```
+>百度找到原因：
+
+>The problem's cause was that Git on Windows converted the line endings of gradlew from Unix style (LF) to Windows style (CRLF).
+You can turn off that automatic conversion using git config core.autocrlf false.
+Setting the line endings of gradlew back to Unix style fixed the problem.
+
+>In Vim this is done using :set fileformat=unix.
+
+```go
+[root@localhost etcd]# vim build
+:set fileformat=umix
+:wq
+[root@localhost etcd]# ./build
+
+[root@localhost etcd]# cd bin
+[root@localhost bin]# ls
+etcd  etcdctl
+```
+这次编译器没有报错，查看bin目录，确实生成两个可执行程序。
+
 **静态集群**
 
 如果Etcd集群成员是已知的，具有固定的IP地址，则可以静态的初始化一个集群。
