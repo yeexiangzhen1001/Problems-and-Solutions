@@ -27,13 +27,13 @@ _(:з」∠)_好吧，我正准备说Websocket呢。。
 首先我们来看个典型的Websocket握手（借用Wikipedia的。。）
 
 > GET /chat HTTP/1.1
-Host: server.example.com
-Upgrade: websocket
-Connection: Upgrade
-Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
-Sec-WebSocket-Protocol: chat, superchat
-Sec-WebSocket-Version: 13
-Origin: http://example.com
+> Host: server.example.com
+> Upgrade: websocket
+> Connection: Upgrade
+> Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+> Sec-WebSocket-Protocol: chat, superchat
+> Sec-WebSocket-Version: 13
+> Origin: http://example.com
 
 熟悉HTTP的童鞋可能发现了，这段类似HTTP协议的握手请求中，多了几个东西。
 我会顺便讲解下作用。
@@ -44,8 +44,8 @@ Origin: http://example.com
 这个就是Websocket的核心了，告诉Apache、Nginx等服务器：注意啦，我发起的是Websocket协议，快点帮我找到对应的助理处理~不是那个老土的HTTP。
 
 > Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
-Sec-WebSocket-Protocol: chat, superchat
-Sec-WebSocket-Version: 13
+> Sec-WebSocket-Protocol: chat, superchat
+> Sec-WebSocket-Version: 13
 
 首先，Sec-WebSocket-Key是一个Base64 encode的值，这个是浏览器随机生成的，告诉服务器：泥煤，不要忽悠窝，我要验证尼是不是真的是Websocket助理。
 
@@ -56,15 +56,15 @@ Sec-WebSocket-Version: 13
 然后服务器会返回下列东西，表示已经接受到请求， 成功建立Websocket啦！
 
 > HTTP/1.1 101 Switching Protocols
-Upgrade: websocket
-Connection: Upgrade
-Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
-Sec-WebSocket-Protocol: chat
+> Upgrade: websocket
+> Connection: Upgrade
+> Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+> Sec-WebSocket-Protocol: chat
 
 这里开始就是HTTP最后负责的区域了，告诉客户，我已经成功切换协议啦~
 
->Upgrade: websocket
-Connection: Upgrade
+> Upgrade: websocket
+> Connection: Upgrade
 
 依然是固定的，告诉客户端即将升级的是Websocket协议，而不是mozillasocket，lurnarsocket或者shitsocket。
 
@@ -96,23 +96,23 @@ ajax轮询的原理非常简单，让浏览器隔个几秒就发送一次请求�
 
 场景再现：
 >客户端：啦啦啦，有没有新信息(Request)
-服务端：没有（Response）
-客户端：啦啦啦，有没有新信息(Request)
-服务端：没有。。（Response）
-客户端：啦啦啦，有没有新信息(Request)
-服务端：你好烦啊，没有啊。。（Response）
-客户端：啦啦啦，有没有新消息（Request）
-服务端：好啦好啦，有啦给你。（Response）
-客户端：啦啦啦，有没有新消息（Request）
-服务端：。。。。。没。。。。没。。。没有（Response） —- loop
+>服务端：没有（Response）
+>客户端：啦啦啦，有没有新信息(Request)
+>服务端：没有。。（Response）
+>客户端：啦啦啦，有没有新信息(Request)
+>服务端：你好烦啊，没有啊。。（Response）
+>客户端：啦啦啦，有没有新消息（Request）
+>服务端：好啦好啦，有啦给你。（Response）
+>客户端：啦啦啦，有没有新消息（Request）
+>服务端：。。。。。没。。。。没。。。没有（Response） —- loop
 
 ## long poll
 long poll 其实原理跟 ajax轮询 差不多，都是采用轮询的方式，不过采取的是阻塞模型（一直打电话，没收到就不挂电话），也就是说，客户端发起连接后，如果没消息，就一直不返回Response给客户端。直到有消息才返回，返回完之后，客户端再次建立连接，周而复始。
 
 场景再现：
 >客户端：啦啦啦，有没有新信息，没有的话就等有了才返回给我吧（Request）
-服务端：额。。 等待到有消息的时候。。来 给你（Response）
-客户端：啦啦啦，有没有新信息，没有的话就等有了才返回给我吧（Request） -loop
+>服务端：额。。 等待到有消息的时候。。来 给你（Response）
+>客户端：啦啦啦，有没有新信息，没有的话就等有了才返回给我吧（Request） -loop
 
 从上面可以看出其实这两种方式，都是在不断地建立HTTP连接，然后等待服务端处理，可以体现HTTP协议的另外一个特点，被动性。
 
@@ -130,12 +130,12 @@ long poll 需要有很高的并发，也就是说同时接待客户的能力。�
 所以ajax轮询和long poll都有可能发生这种情况。
 
 >客户端：啦啦啦啦，有新信息么？
-服务端：月线正忙，请稍后再试（503 Server Unavailable）
-客户端：。。。。好吧，啦啦啦，有新信息么？
-服务端：月线正忙，请稍后再试（503 Server Unavailable）
+>服务端：月线正忙，请稍后再试（503 Server Unavailable）
+>客户端：。。。。好吧，啦啦啦，有新信息么？
+>服务端：月线正忙，请稍后再试（503 Server Unavailable）
 >客户端：
-![](https://pic3.zhimg.com/80/7c0cf075c7ee4cc6cf52f4572a4c1c10_720w.jpg?source=1940ef5c)
-然后服务端在一旁忙的要死：冰箱，我要更多的冰箱！更多。。更多。。（我错了。。这又是梗。。）
+>![](https://pic3.zhimg.com/80/7c0cf075c7ee4cc6cf52f4572a4c1c10_720w.jpg?source=1940ef5c)
+>然后服务端在一旁忙的要死：冰箱，我要更多的冰箱！更多。。更多。。（我错了。。这又是梗。。）
 
 言归正传，我们来说Websocket吧
 通过上面这个例子，我们可以看出，这两种方式都不是最好的方式，需要很多资源。
@@ -146,13 +146,13 @@ long poll 需要有很高的并发，也就是说同时接待客户的能力。�
 所以在这种情况下出现了，Websocket出现了。他解决了HTTP的这几个难题。首先，被动性，当服务器完成协议升级后（HTTP->Websocket），服务端就可以主动推送信息给客户端啦。所以上面的情景可以做如下修改。
 
 >客户端：啦啦啦，我要建立Websocket协议，需要的服务：chat，Websocket协议版本：17（HTTP Request）
-服务端：ok，确认，已升级为Websocket协议（HTTP Protocols Switched）
-客户端：麻烦你有信息的时候推送给我噢。。
-服务端：ok，有的时候会告诉你的。
-服务端：balabalabalabala
-服务端：balabalabalabala
-服务端：哈哈哈哈哈啊哈哈哈哈
-服务端：笑死我了哈哈哈哈哈哈哈
+>服务端：ok，确认，已升级为Websocket协议（HTTP Protocols Switched）
+>客户端：麻烦你有信息的时候推送给我噢。。
+>服务端：ok，有的时候会告诉你的。
+>服务端：balabalabalabala
+>服务端：balabalabalabala
+>服务端：哈哈哈哈哈啊哈哈哈哈
+>服务端：笑死我了哈哈哈哈哈哈哈
 
 就变成了这样，只需要经过一次HTTP请求，就可以做到源源不断的信息传送了。（在程序设计中，这种设计叫做回调，即：你有信息了再来通知我，而不是我傻乎乎的每次跑来问你）
 
